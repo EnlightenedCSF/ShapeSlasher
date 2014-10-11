@@ -5,7 +5,7 @@ import ru.vsu.csf.enlightened.screens.MainMenuScreen;
 
 public class ShapeSlasher extends Game {
 
-    public static int WIDTH   = 800;
+    public static int WIDTH   = 840;
     public static int HEIGHT  = 500;
 	
 	@Override
