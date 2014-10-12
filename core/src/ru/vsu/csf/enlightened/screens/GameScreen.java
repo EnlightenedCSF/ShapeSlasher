@@ -31,6 +31,8 @@ public class GameScreen extends SlasherScreen{
 
     @Override
     public void render(float delta) {
+        delta = Math.min(0.06f, Gdx.graphics.getDeltaTime());
+
         super.render(delta);
 
         mapRenderer.render(delta);
