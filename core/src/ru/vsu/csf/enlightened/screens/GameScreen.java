@@ -22,8 +22,7 @@ public class GameScreen extends SlasherScreen{
 
         Gdx.input.setInputProcessor(new InputAdapter() {
             @Override
-            public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-                mapRenderer.moveCam();
+            public boolean keyDown(int keycode) {
                 return true;
             }
         });

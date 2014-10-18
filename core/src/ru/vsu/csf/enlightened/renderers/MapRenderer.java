@@ -2,11 +2,16 @@ package ru.vsu.csf.enlightened.renderers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.SpriteCache;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.physics.box2d.utils.Box2DBuild;
 import ru.vsu.csf.enlightened.gameobjects.Map;
@@ -18,83 +23,40 @@ public class MapRenderer {
     public static final int BLOCK_WIDTH = 70;
     public static final int BLOCK_HEIGHT = 70;
 
-    public static final float CAM_VELOCITY = 9;
-
     private Map map;
 
     private OrthographicCamera camera;
-    private Vector2 camVelocity;
+    private Vector3 lerpVector;
 
-
+    private SpriteBatch batch;
     private TextureRegion tile;
+    private Sprite hero;
 
     private SpriteCache cache;
     private int[][] blocks;
 
-
-    private World world;
     private Box2DDebugRenderer debugRenderer;
 
-    private Body body;
-
     public MapRenderer(Map map) {
-        world = new World(new Vector2(0, -10), true);
-        debugRenderer = new Box2DDebugRenderer();
+        this.batch = new SpriteBatch();
+
+        this.debugRenderer = new Box2DDebugRenderer();
 
         this.map = map;
         this.camera = new OrthographicCamera(BLOCK_COUNT_WIDTH, BLOCK_COUNT_HEIGHT);
         this.camera.position.set(0, 2, 0);
-        this.camVelocity = new Vector2(0, 0);
+        lerpVector = new Vector3(0, 0, 0);
 
         this.cache = new SpriteCache(map.getTiles().length * map.getTiles()[0].length, false);
         this.blocks = new int[(int) Math.ceil(map.getTiles().length / (float) BLOCK_COUNT_WIDTH)][(int) Math.ceil(map.getTiles()[0].length / (float) BLOCK_COUNT_HEIGHT)];
 
         this.tile = new TextureRegion(new Texture(Gdx.files.internal("assets/tiles/ground.png")), 0, 0, BLOCK_WIDTH, BLOCK_HEIGHT);
 
+        this.hero = new Sprite(new Texture(Gdx.files.internal("assets/characters/hero.png")));
+
         createBlocks();
-        createShapes();
     }
 
-    private void createShapes() {
-        //region Circle
-        BodyDef bodyDef = new BodyDef()
-        {{
-                type = BodyType.DynamicBody;
-                position.set(1, 4);
-            }};
-
-         body = world.createBody(bodyDef);
-
-        final CircleShape circleShape = new CircleShape(){{
-            setRadius(0.5f);
-        }};
-
-        FixtureDef fixtureDef = new FixtureDef() {{
-            shape = circleShape;
-            density = 0.5f;
-            friction = 0.4f;
-            restitution = 0.0f;
-        }};
-
-        body.createFixture(fixtureDef);
-        circleShape.dispose();
-        //endregion
-
-
-        //region Ground
-        BodyDef groundBodyDef = new BodyDef() {{
-            position.set(new Vector2(1f, 0.5f));
-        }};
-
-        Body ground = world.createBody(groundBodyDef);
-
-        PolygonShape groundBox = new PolygonShape() {{
-            setAsBox(1f, 0.5f);
-        }};
-        ground.createFixture(groundBox, 0.0f);
-        groundBox.dispose();
-        //endregion
-    }
 
     private void createBlocks() {
         int width = map.getTiles().length;
@@ -121,16 +83,15 @@ public class MapRenderer {
     }
 
     public void render(float delta) {
-        processButtons();
+        map.update(delta);
 
-        camVelocity.scl(delta);
-        camVelocity.x *= CAM_VELOCITY;
-        camVelocity.y *= CAM_VELOCITY;
+        hero.setPosition(map.getHero().getBody().getPosition().x, map.getHero().getBody().getPosition().y);
 
-        camera.position.add(camVelocity.x, camVelocity.y, 0);
+        camera.position.lerp(lerpVector.set(map.getHero().getBody().getPosition().x, map.getHero().getBody().getPosition().y + 0.5f, 0), 2 * delta);
         camera.update();
 
         cache.setProjectionMatrix(camera.combined);
+        Gdx.gl.glDisable(GL20.GL_BLEND);
         cache.begin();
 
         for (int j = 0; j < blocks[0].length; j++) {
@@ -138,29 +99,15 @@ public class MapRenderer {
                 cache.draw(block[j]);
             }
         }
+
         cache.end();
 
-        debugRenderer.render(world, camera.combined);
-        world.step(1/45f, 6, 2);
-    }
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+        batch.draw(hero, hero.getX() - 0.5f, hero.getY() - 0.5f, 1, 1);
+        batch.end();
 
-    public void moveCam() {
-        camera.position.add(0.1f, 0.1f, 0);
-    }
-
-    private void processButtons() {
-        camVelocity.set(0, 0);
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))
-            camVelocity.add(1, 0);
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
-            camVelocity.add(-1, 0);
-        if (Gdx.input.isKeyPressed(Input.Keys.UP))
-            camVelocity.add(0, 1);
-        if (Gdx.input.isKeyPressed(Input.Keys.DOWN))
-            camVelocity.add(0, -1);
-
-        float maxVelocity = 1f;
-        if (Gdx.input.isKeyPressed(Input.Keys.W) && body.getLinearVelocity().y < maxVelocity)
-            body.applyLinearImpulse(0, 0.5f, body.getPosition().x, body.getPosition().y, true);
+        debugRenderer.render(map.getWorld(), camera.combined);
+        map.getWorld().step(1 / 45f, 6, 2);
     }
 }
