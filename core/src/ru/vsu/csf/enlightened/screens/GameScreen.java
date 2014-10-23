@@ -8,6 +8,7 @@ import ru.vsu.csf.enlightened.renderers.MapRenderer;
 
 public class GameScreen extends SlasherScreen{
 
+    private Map map;
     private MapRenderer mapRenderer;
 
     public GameScreen(Game game) {
@@ -18,11 +19,19 @@ public class GameScreen extends SlasherScreen{
     public void show() {
         super.show();
 
-        mapRenderer = new MapRenderer(new Map());
+        map = new Map();
+        mapRenderer = new MapRenderer(map);
 
         Gdx.input.setInputProcessor(new InputAdapter() {
             @Override
             public boolean keyDown(int keycode) {
+                map.keyDown(keycode);
+                return true;
+            }
+
+            @Override
+            public boolean keyUp(int keycode) {
+                map.keyUp(keycode);
                 return true;
             }
         });

@@ -14,6 +14,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.physics.box2d.utils.Box2DBuild;
+import ru.vsu.csf.enlightened.ShapeSlasher;
 import ru.vsu.csf.enlightened.gameobjects.Map;
 
 public class MapRenderer {
@@ -22,6 +23,7 @@ public class MapRenderer {
     public static final int BLOCK_COUNT_HEIGHT = 7;
     public static final int BLOCK_WIDTH = 70;
     public static final int BLOCK_HEIGHT = 70;
+    private static final boolean IS_DRAWING_GRAPHICS = false;
 
     private Map map;
 
@@ -29,6 +31,9 @@ public class MapRenderer {
     private Vector3 lerpVector;
 
     private SpriteBatch batch;
+    private SpriteBatch skyBatch;
+
+    private TextureRegion sky;
     private TextureRegion tile;
     private Sprite hero;
 
@@ -39,6 +44,7 @@ public class MapRenderer {
 
     public MapRenderer(Map map) {
         this.batch = new SpriteBatch();
+        this.skyBatch = new SpriteBatch(10);
 
         this.debugRenderer = new Box2DDebugRenderer();
 
@@ -50,8 +56,8 @@ public class MapRenderer {
         this.cache = new SpriteCache(map.getTiles().length * map.getTiles()[0].length, false);
         this.blocks = new int[(int) Math.ceil(map.getTiles().length / (float) BLOCK_COUNT_WIDTH)][(int) Math.ceil(map.getTiles()[0].length / (float) BLOCK_COUNT_HEIGHT)];
 
-        this.tile = new TextureRegion(new Texture(Gdx.files.internal("assets/tiles/ground.png")), 0, 0, BLOCK_WIDTH, BLOCK_HEIGHT);
-
+        this.tile = new TextureRegion(new Texture(Gdx.files.internal("assets/tiles/ground2.png")), 0, 0, BLOCK_WIDTH, BLOCK_HEIGHT);
+        this.sky = new TextureRegion(new Texture(Gdx.files.internal("assets/backgrounds/sky2.png")));
         this.hero = new Sprite(new Texture(Gdx.files.internal("assets/characters/hero.png")));
 
         createBlocks();
@@ -90,24 +96,30 @@ public class MapRenderer {
         camera.position.lerp(lerpVector.set(map.getHero().getBody().getPosition().x, map.getHero().getBody().getPosition().y + 0.5f, 0), 2 * delta);
         camera.update();
 
-        cache.setProjectionMatrix(camera.combined);
-        Gdx.gl.glDisable(GL20.GL_BLEND);
-        cache.begin();
+        if (IS_DRAWING_GRAPHICS) {
+            skyBatch.begin();
+            skyBatch.draw(sky, 0, 0, ShapeSlasher.WIDTH, ShapeSlasher.HEIGHT);
+            skyBatch.end();
 
-        for (int j = 0; j < blocks[0].length; j++) {
-            for (int[] block : blocks) {
-                cache.draw(block[j]);
+            cache.setProjectionMatrix(camera.combined);
+            Gdx.gl.glDisable(GL20.GL_BLEND);
+            cache.begin();
+
+            for (int j = 0; j < blocks[0].length; j++) {
+                for (int[] block : blocks) {
+                    cache.draw(block[j]);
+                }
             }
+
+            cache.end();
+
+            batch.setProjectionMatrix(camera.combined);
+            batch.begin();
+            batch.draw(hero, hero.getX() - 0.5f, hero.getY() - 0.5f, 1, 1);
+            batch.end();
         }
 
-        cache.end();
-
-        batch.setProjectionMatrix(camera.combined);
-        batch.begin();
-        batch.draw(hero, hero.getX() - 0.5f, hero.getY() - 0.5f, 1, 1);
-        batch.end();
-
         debugRenderer.render(map.getWorld(), camera.combined);
-        map.getWorld().step(1 / 45f, 6, 2);
+        map.getWorld().step(Gdx.graphics.getDeltaTime(), 6, 2);
     }
 }

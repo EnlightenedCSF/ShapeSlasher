@@ -1,15 +1,33 @@
 package ru.vsu.csf.enlightened.gameobjects;
 
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import ru.vsu.csf.enlightened.gameobjects.collisions.HeroCollideListener;
+import ru.vsu.csf.enlightened.gameobjects.enemies.Dummy;
+import ru.vsu.csf.enlightened.gameobjects.hero.Hero;
+
+import java.util.ArrayList;
 
 public class Map {
 
+    private static final float GRAVITY = 12;
+
+    private static final int GROUND_CATEGORY    = 1;    // 0 0 0 1
+    private static final int GROUND_MASK        = 10;   // 1 0 1 0
+    public static final int HERO_CATEGORY  = 2; // 0 0 1 0
+    public static final int HERO_MASK      = 9; // 1 0 0 1
+    public static final int SWORD_CATEGORY = 4; // 0 1 0 0
+    public static final int SWORD_MASK     = 0; // 0 0 0 0
+    public static final int ENEMY_CATEGORY = 8; // 1 0 0 0
+    public static final int ENEMY_MASK     = 7; // 0 1 1 1
+
+
     private int[][] tiles;
-    private Body[] grounds;
+    private ArrayList<Body> grounds;
 
     private Hero hero;
+    private ArrayList<Dummy> enemies;
 
     private World world;
 
@@ -23,49 +41,75 @@ public class Map {
     }
 
     public Map() {
-        world = new World(new Vector2(0, -10), true);
+        world = new World(new Vector2(0, -GRAVITY), true);
         world.setContactListener(new HeroCollideListener());
 
-        hero = new Hero(world);
+        enemies = new ArrayList<Dummy>();
 
         generateLevel();
+
         searchForSolidGround();
+
+        hero = new Hero(world);
+        enemies.add(new Dummy(world, 5, 5));
+        enemies.add(new Dummy(world, 7, 5));
     }
 
     private void searchForSolidGround() {
         int width = tiles.length;
         int height = tiles[0].length;
 
-        grounds = new Body[width];
+        grounds = new ArrayList<Body>();
 
-        for (int col = 0; col < width; col++) {
+        int len = 0;
+        int startCol = 0;
+        boolean start = false;
 
-            int row_start = -1;
-            int len = 0;
+        for (int j = 0; j < height; j++) {
+            for (int i = 0; i < width; i++) {
+                if (tiles[i][j] == 1) {
+                    if (!start) {
+                        start = true;
+                        startCol = i;
+                    }
 
-            for (int row = 0; row < height; row++) {
-                if (tiles[col][row] == 1) {
-                    if (row_start == -1)
-                        row_start = row;
                     len++;
+                }
+                else if (start) {
+                    createGroundBlock(j, startCol, len);
+                    start = false;
+                    len = 0;
                 }
             }
 
-            final int finalCol = col;
-            final int finalLen = len;
-            BodyDef groundBodyDef = new BodyDef() {{
-                position.set(new Vector2(0.5f + finalCol, 0.5f * finalLen));
-            }};
-
-            grounds[col] = world.createBody(groundBodyDef);
-
-            PolygonShape groundBox = new PolygonShape() {{
-                setAsBox(0.5f, 0.5f * finalLen);
-            }};
-            grounds[col].createFixture(groundBox, 0.0f);
-
-            groundBox.dispose();
+            if (start) {
+                createGroundBlock(j, startCol, len);
+                start = false;
+                len = 0;
+            }
         }
+    }
+
+    private void createGroundBlock(final int height, final int startIndex, final int length) {
+
+        final int h = tiles[0].length;
+
+        BodyDef groundBodyDef = new BodyDef() {{
+            position.set(new Vector2(startIndex + length/2.0f, 0.5f + h - (height + 1)));
+        }};
+
+        grounds.add(0, world.createBody(groundBodyDef));
+
+        FixtureDef fixtureDef = new FixtureDef() {{
+            shape = new PolygonShape() {{
+                setAsBox(0.5f * length, 0.5f);
+            }};
+            density = 0.001f;
+            filter.categoryBits = GROUND_CATEGORY;
+            filter.maskBits = GROUND_MASK;
+        }};
+
+        grounds.get(0).createFixture(fixtureDef);
     }
 
     private void generateLevel() {
@@ -79,7 +123,7 @@ public class Map {
                 if (j == 9) {
                     tiles[i][j] = 1;
                 }
-                else if (j == 8 && i % 3 == 2) {
+                else if (j == 8 && i % 7 == 6) {
                     tiles[i][j] = 1;
                 }
             }
@@ -93,5 +137,57 @@ public class Map {
     public void update(float delta) {
         hero.update();
     }
+
+    public void keyDown(int keycode) {
+        if (keycode == Input.Keys.SHIFT_LEFT)
+            hero.setShieldUp(true);
+    }
+
+    public void keyUp(int keycode) {
+        if (keycode == Input.Keys.SHIFT_LEFT)
+            hero.setShieldUp(false);
+    }
+
+
+    /*Body square;
+    Body circle;
+
+    private void test() {
+
+         square = world.createBody(new BodyDef() {{
+             type = BodyType.DynamicBody;
+             position.set(0, 0);
+        }});
+
+        FixtureDef fixtureDef = new FixtureDef() {{
+            shape = new PolygonShape(){{setAsBox(0.5f, 0.5f);}};
+            density = 0.5f;
+            restitution = 1;
+            filter.maskBits = 0;
+        }};
+
+        square.createFixture(fixtureDef);
+
+        circle = world.createBody(new BodyDef() {{
+            type = BodyType.DynamicBody;
+            position.set(0.5f, 0.5f);
+        }});
+
+        circle.createFixture(new FixtureDef() {{
+            shape = new CircleShape() {{ setRadius( 0.5f );}};
+            density = 0.5f;
+            restitution = 1;
+            filter.maskBits = 0;
+        }});
+
+        RevoluteJointDef jointDef = new RevoluteJointDef();
+        //jointDef.initialize(square, circle, circle.getWorldCenter());
+        jointDef.bodyA = square;
+        jointDef.bodyB = circle;
+        jointDef.localAnchorA.set(circle.getPosition());
+        jointDef.localAnchorB.set(square.getPosition());
+        world.createJoint(jointDef);
+
+    }*/
 }
 

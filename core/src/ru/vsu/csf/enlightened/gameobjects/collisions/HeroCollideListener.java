@@ -1,11 +1,10 @@
 package ru.vsu.csf.enlightened.gameobjects.collisions;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Manifold;
-import ru.vsu.csf.enlightened.gameobjects.Hero;
+import ru.vsu.csf.enlightened.gameobjects.hero.Hero;
 
 public class HeroCollideListener implements ContactListener{
     @Override
