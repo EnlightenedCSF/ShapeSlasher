@@ -3,6 +3,7 @@ package ru.vsu.csf.enlightened.gameobjects;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import ru.vsu.csf.enlightened.controlling.ComboTree;
 import ru.vsu.csf.enlightened.gameobjects.collisions.HeroCollideListener;
 import ru.vsu.csf.enlightened.gameobjects.enemies.Dummy;
 import ru.vsu.csf.enlightened.gameobjects.hero.Hero;
@@ -31,6 +32,8 @@ public class Map {
 
     private World world;
 
+    private ComboTree keyController;
+
 
     public World getWorld() {
         return world;
@@ -45,6 +48,8 @@ public class Map {
         world.setContactListener(new HeroCollideListener());
 
         enemies = new ArrayList<Dummy>();
+
+        keyController = new ComboTree();
 
         generateLevel();
 
@@ -135,17 +140,22 @@ public class Map {
     }
 
     public void update(float delta) {
+        keyController.tick(delta);
         hero.update();
     }
 
     public void keyDown(int keycode) {
         if (keycode == Input.Keys.SHIFT_LEFT)
             hero.setShieldUp(true);
+        else
+            keyController.keyDown(keycode);
     }
 
     public void keyUp(int keycode) {
         if (keycode == Input.Keys.SHIFT_LEFT)
             hero.setShieldUp(false);
+        else
+            keyController.keyUp(keycode);
     }
 
 

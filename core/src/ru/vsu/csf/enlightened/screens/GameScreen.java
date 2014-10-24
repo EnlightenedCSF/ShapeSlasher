@@ -23,6 +23,7 @@ public class GameScreen extends SlasherScreen{
         mapRenderer = new MapRenderer(map);
 
         Gdx.input.setInputProcessor(new InputAdapter() {
+
             @Override
             public boolean keyDown(int keycode) {
                 map.keyDown(keycode);
