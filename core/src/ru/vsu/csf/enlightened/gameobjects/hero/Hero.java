@@ -4,6 +4,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import ru.vsu.csf.enlightened.controlling.attacking.AttackTemplate;
+import ru.vsu.csf.enlightened.controlling.attacking.Attacks;
+import ru.vsu.csf.enlightened.controlling.attacking.CurrentAttack;
 import ru.vsu.csf.enlightened.gameobjects.Map;
 
 public class Hero {
@@ -13,11 +16,14 @@ public class Hero {
     private static final float MAX_VELOCITY = 6f;
     private static final float MASS = 0.7f;
 
+    private static final float STANDARD_ATTACK_DURATION = 0.2f;
+
+
     private World world;
 
     private Body body;
-    private Body sword;
     private Body shield;
+    private CurrentAttack currentAttack;
 
     private int numContacts;
 
@@ -153,7 +159,15 @@ public class Hero {
     }*/
 
 
-    public void update() {
+    public void update(float delta) {
+        if (currentAttack != null) {
+            currentAttack.duration -= delta;
+            if (currentAttack.duration < 0) {
+                world.destroyBody(currentAttack.body);
+                currentAttack = null;
+            }
+        }
+
         Vector2 vel = body.getLinearVelocity();
 
         if (Math.abs(vel.x) > MAX_VELOCITY) {
@@ -210,5 +224,23 @@ public class Hero {
                     break;
             }
         }
+    }
+
+    public void attack(int index) {
+        if (currentAttack != null)
+            return;
+
+        final AttackTemplate template = Attacks.attacks.get(index).get(facing);
+
+        BodyDef def = new BodyDef() {{
+            type = BodyType.KinematicBody;
+            position.set(template.bodyDef.position.x + body.getPosition().x, template.bodyDef.position.y + body.getPosition().y);
+        }
+        };
+
+        Body atk = world.createBody(def);
+        atk.createFixture(template.fixtureDef);
+
+        currentAttack = new CurrentAttack(atk, STANDARD_ATTACK_DURATION);
     }
 }

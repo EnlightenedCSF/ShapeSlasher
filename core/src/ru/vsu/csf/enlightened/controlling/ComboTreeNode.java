@@ -32,10 +32,14 @@ public class ComboTreeNode {
     }
 
     public ComboTreeNode getChildWithKeycode(int keycode) {
+        if (nodes == null)
+            return null;
+
         for (ComboTreeNode node : nodes) {
             if (node.key == keycode)
                 return node;
         }
+
         return null;
     }
 

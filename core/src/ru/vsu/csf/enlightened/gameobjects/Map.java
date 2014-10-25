@@ -47,15 +47,16 @@ public class Map {
         world = new World(new Vector2(0, -GRAVITY), true);
         world.setContactListener(new HeroCollideListener());
 
+        hero = new Hero(world);
         enemies = new ArrayList<Dummy>();
 
-        keyController = new ComboTree();
+        keyController = new ComboTree(hero);
 
         generateLevel();
 
         searchForSolidGround();
 
-        hero = new Hero(world);
+
         enemies.add(new Dummy(world, 5, 5));
         enemies.add(new Dummy(world, 7, 5));
     }
@@ -141,7 +142,7 @@ public class Map {
 
     public void update(float delta) {
         keyController.tick(delta);
-        hero.update();
+        hero.update(delta);
     }
 
     public void keyDown(int keycode) {
