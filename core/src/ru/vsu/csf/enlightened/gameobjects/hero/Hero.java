@@ -8,6 +8,7 @@ import ru.vsu.csf.enlightened.controlling.attacking.AttackTemplate;
 import ru.vsu.csf.enlightened.controlling.attacking.Attacks;
 import ru.vsu.csf.enlightened.controlling.attacking.CurrentAttack;
 import ru.vsu.csf.enlightened.gameobjects.Map;
+import ru.vsu.csf.enlightened.gameobjects.collisions.EntityTypes;
 
 public class Hero {
 
@@ -25,7 +26,7 @@ public class Hero {
     private Body shield;
     private CurrentAttack currentAttack;
 
-    private int numContacts;
+    private boolean isGrounded;
 
     private boolean shieldUp;
 
@@ -36,16 +37,11 @@ public class Hero {
     }
 
     public boolean isGrounded() {
-        return numContacts > 0;
+        return isGrounded;
     }
 
-    public void incNumContacts() {
-        this.numContacts++;
-        body.setLinearVelocity(new Vector2(0, 0));
-    }
-
-    public void decNumContacts() {
-        this.numContacts--;
+    public void setIsGrounded(boolean isGrounded) {
+        this.isGrounded = isGrounded;
     }
 
     public boolean isShieldUp() {
@@ -62,7 +58,6 @@ public class Hero {
 
     public Hero(World world) {
         this.world = world;
-        numContacts = 0;
         shieldUp = false;
         facing = Facing.RIGHT;
 
@@ -83,8 +78,8 @@ public class Hero {
             density = MASS;
             friction = 0.2f;
             restitution = 0.0f;
-            filter.categoryBits = Map.HERO_CATEGORY;
-            filter.maskBits = Map.HERO_MASK;
+            filter.categoryBits = EntityTypes.HERO_CATEGORY;
+            filter.maskBits = EntityTypes.HERO_MASK;
         }};
 
         body.createFixture(fixtureDef);
@@ -93,7 +88,6 @@ public class Hero {
 
         body.setUserData(this);
 
-        //createSword();
         createShield();
     }
 
@@ -114,8 +108,8 @@ public class Hero {
             shape = polygonShape;
             density = 0.1f;
             restitution = 0.8f;
-            filter.categoryBits = Map.SWORD_CATEGORY;
-            filter.maskBits = Map.SWORD_MASK;
+            filter.categoryBits = EntityTypes.SWORD_CATEGORY;
+            filter.maskBits = EntityTypes.SWORD_MASK;
         }};
 
         shield.createFixture(fixtureDef);
@@ -131,32 +125,6 @@ public class Hero {
     private void hideShield() {
         shield.setActive(false);
     }
-
-    /*public void createSword() {
-        BodyDef bodyDef = new BodyDef() {{
-            type = BodyType.DynamicBody;
-            position.set(1.2f, 5f);
-        }};
-
-        sword = world.createBody(bodyDef);
-
-        final PolygonShape pShape = new PolygonShape() {{
-            set(new Vector2[]{new Vector2(0, -0.1f), new Vector2(0, 0.1f), new Vector2(0.75f, 0.0f)});
-        }};
-
-        FixtureDef fixtureDef = new FixtureDef() {{
-            shape = pShape;
-            density = 0.1f;
-            restitution = 0;
-            friction = 0.8f;
-            filter.categoryBits = Map.SWORD_CATEGORY;
-            filter.maskBits = Map.SWORD_MASK;
-        }};
-
-        sword.createFixture(fixtureDef);
-        sword.setFixedRotation(true);
-        pShape.dispose();
-    }*/
 
 
     public void update(float delta) {
@@ -230,7 +198,7 @@ public class Hero {
         if (currentAttack != null)
             return;
 
-        final AttackTemplate template = Attacks.attacks.get(index).get(facing);
+        final AttackTemplate template = Attacks.getAttacks().get(index).get(facing);
 
         BodyDef def = new BodyDef() {{
             type = BodyType.KinematicBody;
@@ -241,6 +209,8 @@ public class Hero {
         Body atk = world.createBody(def);
         atk.createFixture(template.fixtureDef);
 
-        currentAttack = new CurrentAttack(atk, STANDARD_ATTACK_DURATION);
+        currentAttack = new CurrentAttack(index, facing, atk, STANDARD_ATTACK_DURATION);
+
+        atk.setUserData(currentAttack);
     }
 }

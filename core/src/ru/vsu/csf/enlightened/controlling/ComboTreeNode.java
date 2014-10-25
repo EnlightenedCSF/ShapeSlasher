@@ -5,7 +5,6 @@ import com.badlogic.gdx.Gdx;
 public class ComboTreeNode {
 
     int key;
-    //KeyPressType pressType;
 
     float delay;
     float timeLeft;
@@ -13,12 +12,12 @@ public class ComboTreeNode {
     public Action action;
     public ComboTreeNode[] nodes;
 
-    public ComboTreeNode(int key/*, KeyPressType pressType*/, float delay) {
+    public ComboTreeNode(int key, float delay) {
         this.key = key;
-        //this.pressType = pressType;
         this.delay = delay;
         timeLeft = delay;
         action = null;
+        nodes = null;
     }
 
     public boolean isComboOver(float delta) {

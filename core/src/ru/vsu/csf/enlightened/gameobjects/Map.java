@@ -4,6 +4,8 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import ru.vsu.csf.enlightened.controlling.ComboTree;
+import ru.vsu.csf.enlightened.controlling.attacking.Attacks;
+import ru.vsu.csf.enlightened.gameobjects.collisions.EntityTypes;
 import ru.vsu.csf.enlightened.gameobjects.collisions.HeroCollideListener;
 import ru.vsu.csf.enlightened.gameobjects.enemies.Dummy;
 import ru.vsu.csf.enlightened.gameobjects.hero.Hero;
@@ -14,16 +16,6 @@ public class Map {
 
     private static final float GRAVITY = 12;
 
-    private static final int GROUND_CATEGORY    = 1;    // 0 0 0 1
-    private static final int GROUND_MASK        = 10;   // 1 0 1 0
-    public static final int HERO_CATEGORY  = 2; // 0 0 1 0
-    public static final int HERO_MASK      = 9; // 1 0 0 1
-    public static final int SWORD_CATEGORY = 4; // 0 1 0 0
-    public static final int SWORD_MASK     = 0; // 0 0 0 0
-    public static final int ENEMY_CATEGORY = 8; // 1 0 0 0
-    public static final int ENEMY_MASK     = 7; // 0 1 1 1
-
-
     private int[][] tiles;
     private ArrayList<Body> grounds;
 
@@ -33,7 +25,6 @@ public class Map {
     private World world;
 
     private ComboTree keyController;
-
 
     public World getWorld() {
         return world;
@@ -111,11 +102,12 @@ public class Map {
                 setAsBox(0.5f * length, 0.5f);
             }};
             density = 0.001f;
-            filter.categoryBits = GROUND_CATEGORY;
-            filter.maskBits = GROUND_MASK;
+            filter.categoryBits = EntityTypes.GROUND_CATEGORY;
+            filter.maskBits = EntityTypes.GROUND_MASK;
         }};
 
         grounds.get(0).createFixture(fixtureDef);
+        grounds.get(0).setUserData(this);
     }
 
     private void generateLevel() {

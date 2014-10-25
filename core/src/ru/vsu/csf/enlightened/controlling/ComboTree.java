@@ -85,9 +85,8 @@ public class ComboTree {
                 current = node;
                 current.Do();
 
-                if (current.nodes.length == 0)
+                if (current.nodes == null)
                     current = root;
-                //Gdx.app.log("Key", "Pressed down");
             }
         }
         else {
@@ -97,9 +96,12 @@ public class ComboTree {
                 Gdx.app.log("Key", "You have ended your combo");
             }
             else {
+                current.timeLeft = current.delay;
                 current = node;
                 current.Do();
-                //Gdx.app.log("Key", "next one is pressed!");
+
+                if (current.nodes == null)
+                    current = root;
             }
         }
     }
