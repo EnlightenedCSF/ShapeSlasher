@@ -5,7 +5,6 @@ import com.badlogic.gdx.physics.box2d.*;
 import ru.vsu.csf.enlightened.controlling.attacking.AttackTemplate;
 import ru.vsu.csf.enlightened.controlling.attacking.Attacks;
 import ru.vsu.csf.enlightened.controlling.attacking.CurrentAttack;
-import ru.vsu.csf.enlightened.gameobjects.Map;
 import ru.vsu.csf.enlightened.gameobjects.collisions.EntityTypes;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -44,7 +43,7 @@ public class Dummy {
             friction = 50f;
             restitution = 0.1f;
             density = 0.8f;
-            filter.categoryBits = EntityTypes.ENEMY_CATEGORY;
+            filter.categoryBits = EntityTypes.ENEMY;
             filter.maskBits = EntityTypes.ENEMY_MASK;
         }});
 

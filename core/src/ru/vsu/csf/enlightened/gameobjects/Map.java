@@ -4,7 +4,6 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import ru.vsu.csf.enlightened.controlling.ComboTree;
-import ru.vsu.csf.enlightened.controlling.attacking.Attacks;
 import ru.vsu.csf.enlightened.gameobjects.collisions.EntityTypes;
 import ru.vsu.csf.enlightened.gameobjects.collisions.HeroCollideListener;
 import ru.vsu.csf.enlightened.gameobjects.enemies.Dummy;
@@ -102,7 +101,7 @@ public class Map {
                 setAsBox(0.5f * length, 0.5f);
             }};
             density = 0.001f;
-            filter.categoryBits = EntityTypes.GROUND_CATEGORY;
+            filter.categoryBits = EntityTypes.GROUND;
             filter.maskBits = EntityTypes.GROUND_MASK;
         }};
 

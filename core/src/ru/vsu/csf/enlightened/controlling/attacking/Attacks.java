@@ -30,7 +30,7 @@ public class Attacks {
                                     set(polyShape);
                                 }
                             };
-                            filter.categoryBits = EntityTypes.SWORD_CATEGORY;
+                            filter.categoryBits = EntityTypes.SWORD;
                             filter.maskBits = EntityTypes.SWORD_MASK;
                             isSensor = true;
                         }
@@ -57,7 +57,7 @@ public class Attacks {
                                     set(newPShape);
                                 }
                             };
-                            filter.categoryBits = EntityTypes.SWORD_CATEGORY;
+                            filter.categoryBits = EntityTypes.SWORD;
                             filter.maskBits = EntityTypes.SWORD_MASK;
                             isSensor = true;
                         }

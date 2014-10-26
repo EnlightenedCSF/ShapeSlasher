@@ -7,7 +7,6 @@ import com.badlogic.gdx.physics.box2d.*;
 import ru.vsu.csf.enlightened.controlling.attacking.AttackTemplate;
 import ru.vsu.csf.enlightened.controlling.attacking.Attacks;
 import ru.vsu.csf.enlightened.controlling.attacking.CurrentAttack;
-import ru.vsu.csf.enlightened.gameobjects.Map;
 import ru.vsu.csf.enlightened.gameobjects.collisions.EntityTypes;
 
 public class Hero {
@@ -19,11 +18,12 @@ public class Hero {
 
     private static final float STANDARD_ATTACK_DURATION = 0.2f;
 
-
     private World world;
 
     private Body body;
+    private Body sensor;
     private Body shield;
+
     private CurrentAttack currentAttack;
 
     private boolean isGrounded;
@@ -78,21 +78,50 @@ public class Hero {
             density = MASS;
             friction = 0.2f;
             restitution = 0.0f;
-            filter.categoryBits = EntityTypes.HERO_CATEGORY;
+            filter.categoryBits = EntityTypes.HERO;
             filter.maskBits = EntityTypes.HERO_MASK;
         }};
-
         body.createFixture(fixtureDef);
+
         body.setFixedRotation(true);
         polygonShape.dispose();
 
         body.setUserData(this);
 
+        createSensor();
         createShield();
     }
 
+    private void createSensor() {
+        BodyDef bodyDef = new BodyDef() {{
+            type = BodyType.DynamicBody;
+            position.set(body.getPosition().x, body.getPosition().y - 0.45f);
+        }
+        };
 
-    public void createShield() {
+        sensor = world.createBody(bodyDef);
+
+        final PolygonShape poly = new PolygonShape() {{
+            setAsBox(0.3f, 0.05f);
+        }
+        };
+
+        FixtureDef fixtureDef = new FixtureDef() {{
+            shape = poly;
+            filter.categoryBits = EntityTypes.SENSOR;
+            filter.maskBits = EntityTypes.SENSOR_MASK;
+            isSensor = true;
+        }
+        };
+
+        sensor.createFixture(fixtureDef);
+        sensor.setFixedRotation(true);
+        sensor.setUserData(this);
+
+        poly.dispose();
+    }
+
+    private void createShield() {
         BodyDef bodyDef = new BodyDef() {{
             type = BodyType.KinematicBody;
             position.set(body.getWorldCenter().x + 0.6f, body.getWorldCenter().y + 0);
@@ -108,7 +137,7 @@ public class Hero {
             shape = polygonShape;
             density = 0.1f;
             restitution = 0.8f;
-            filter.categoryBits = EntityTypes.SWORD_CATEGORY;
+            filter.categoryBits = EntityTypes.SWORD;
             filter.maskBits = EntityTypes.SWORD_MASK;
         }};
 
@@ -179,6 +208,11 @@ public class Hero {
         }
 
         updateShield();
+        updateSensor();
+    }
+
+    private void updateSensor() {
+        sensor.setTransform(body.getPosition().x, body.getPosition().y - 0.45f, 0);
     }
 
     private void updateShield() {

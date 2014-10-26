@@ -11,7 +11,35 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class HeroCollideListener implements ContactListener{
 
-    private boolean ifHeroTouchesGround(Contact contact, AtomicReference<Hero> hero) {
+    private boolean ifHeroReallyTouchesGround(Contact contact, AtomicReference<Hero> hero) {
+        Fixture fixtureA = contact.getFixtureA();
+        Fixture fixtureB = contact.getFixtureB();
+
+        boolean isSensorA = fixtureA.isSensor();
+        boolean isSensorB = fixtureB.isSensor();
+
+        if (! (isSensorA ^ isSensorB)) {
+            return false;
+        }
+
+        Object first  = fixtureA.getBody().getUserData();
+        Object second = fixtureB.getBody().getUserData();
+
+        if (first == null || second == null)
+            return false;
+
+        if (isSensorA && first.getClass().equals(Hero.class)) {
+            hero.set((Hero) first);
+            return true;
+        }
+        else if (second.getClass().equals(Hero.class)) {
+            hero.set((Hero) second);
+            return true;
+        }
+        return false;
+    }
+
+    /*private boolean ifHeroTouchesGround(Contact contact, AtomicReference<Hero> hero) {
         Fixture fixtureA = contact.getFixtureA();
         Fixture fixtureB = contact.getFixtureB();
 
@@ -31,7 +59,7 @@ public class HeroCollideListener implements ContactListener{
         }
         else
             return false;
-    }
+    }*/
 
     private boolean ifEnemyWasHit(Contact contact, AtomicReference<Dummy> enemy, AtomicReference<CurrentAttack> attack) {
         Fixture fixtureA = contact.getFixtureA();
@@ -63,8 +91,7 @@ public class HeroCollideListener implements ContactListener{
         AtomicReference<Dummy> enemy = new AtomicReference<Dummy>(null);
         AtomicReference<CurrentAttack> attack = new AtomicReference<CurrentAttack>(null);
 
-
-        if (ifHeroTouchesGround(contact, hero)) {
+        if (ifHeroReallyTouchesGround(contact, hero)) {
             hero.get().setIsGrounded(true);
         }
 
@@ -76,17 +103,15 @@ public class HeroCollideListener implements ContactListener{
     @Override
     public void endContact(Contact contact) {
         AtomicReference<Hero> hero = new AtomicReference<Hero>(null);
-        if (ifHeroTouchesGround(contact, hero)) {
+        AtomicReference<Dummy> enemy = new AtomicReference<Dummy>(null);
+        AtomicReference<CurrentAttack> attack = new AtomicReference<CurrentAttack>(null);
+
+        if (ifHeroReallyTouchesGround(contact, hero)) {
             hero.get().setIsGrounded(false);
         }
-        else {
-            AtomicReference<Dummy> enemy = new AtomicReference<Dummy>(null);
-            AtomicReference<CurrentAttack> attack = new AtomicReference<CurrentAttack>(null);
+        /*if (ifEnemyWasHit(contact, enemy, attack)) {
 
-            if (ifEnemyWasHit(contact, enemy, attack)) {
-
-            }
-        }
+        }*/
     }
 
     @Override
