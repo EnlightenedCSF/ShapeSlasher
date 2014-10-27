@@ -69,6 +69,10 @@ public class Hero {
         return hp;
     }
 
+    public Projectiles getProjectiles() {
+        return projectiles;
+    }
+
     public Hero(World world) {
         this.world = world;
 

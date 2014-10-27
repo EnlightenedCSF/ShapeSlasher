@@ -53,16 +53,15 @@ public class Dummy {
         body.setFixedRotation(true);
     }
 
-    public void beAttacked(AtomicReference<CurrentAttack> attack) {
-        CurrentAttack currentAttack = attack.get();
+    public void beAttacked(CurrentAttack attack) {
 
-        AttackTemplate template = Attacks.getAttacks().get(currentAttack.index).get(currentAttack.facing);
+        AttackTemplate template = Attacks.getAttacks().get(attack.index).get(attack.facing);
 
         int damage = template.damage;
+        this.decreaseHP(damage);
+
         Vector2 direction = new Vector2(template.knockbackDirection).nor().scl(template.knockbackPower);
         Vector2 position = body.getPosition();
-
-        this.decreaseHP(damage);
 
         //world.destroyBody(currentAttack.body);
 
@@ -70,5 +69,15 @@ public class Dummy {
         body.applyLinearImpulse(direction.x, direction.y, position.x, position.y, true);
 
         //attack.set(null);
+    }
+
+    public void bePierced(Body knife) {
+        this.decreaseHP(Attacks.PROJECTILE_DAMAGE);
+
+        Vector2 direction = new Vector2((float)Math.cos(knife.getAngle()), (float)Math.sin(knife.getAngle())).scl(Attacks.PROJECTILE_KNOCKBACK);
+        Vector2 position = body.getPosition();
+
+        body.getPosition().set(position.x, position.y + 0.05f);
+        body.applyLinearImpulse(direction.x, direction.y, position.x, position.y, true);
     }
 }

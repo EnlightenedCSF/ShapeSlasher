@@ -154,6 +154,8 @@ public class MapRenderer {
 
         debugRenderer.render(map.getWorld(), camera.combined);
         map.getWorld().step(Gdx.graphics.getDeltaTime(), 6, 2);
+
+        map.getHero().getProjectiles().clearCollided();
     }
 
     public void updateMousePosition(int screenX, int screenY) {

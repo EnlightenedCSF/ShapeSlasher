@@ -12,6 +12,8 @@ import java.util.HashMap;
 
 public class Attacks {
 
+    public static final int PROJECTILE_DAMAGE = 10;
+    public static final int PROJECTILE_KNOCKBACK = 2;
     public static FixtureDef getProjectile() {
         return new FixtureDef() {{
                 shape = new PolygonShape() {{

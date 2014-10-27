@@ -46,7 +46,6 @@ public class Map {
 
         searchForSolidGround();
 
-
         enemies.add(new Dummy(world, 5, 5));
         enemies.add(new Dummy(world, 7, 5));
     }
