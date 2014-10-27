@@ -3,11 +3,16 @@ package ru.vsu.csf.enlightened.gameobjects.hero;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.*;
 import ru.vsu.csf.enlightened.controlling.attacking.AttackTemplate;
 import ru.vsu.csf.enlightened.controlling.attacking.Attacks;
 import ru.vsu.csf.enlightened.controlling.attacking.CurrentAttack;
+import ru.vsu.csf.enlightened.controlling.attacking.projectile.Projectiles;
 import ru.vsu.csf.enlightened.gameobjects.collisions.EntityTypes;
+import ru.vsu.csf.enlightened.renderers.MapRenderer;
+
+import java.util.ArrayList;
 
 public class Hero {
 
@@ -15,22 +20,26 @@ public class Hero {
     private static final float RUN_SPEED = 0.7f;
     private static final float MAX_VELOCITY = 6f;
     private static final float MASS = 0.7f;
-
+    private static final float HERO_SIZE = 0.4f;
+    private static final float PROJECTILE_SPAWN_DISTANCE = 0.8f;
+    public  static final float PROJECTILE_SPEED = 0.25f;
     private static final float STANDARD_ATTACK_DURATION = 0.2f;
 
     private World world;
 
     private Body body;
+    private Facing facing;
     private Body sensor;
-    private Body shield;
-
-    private CurrentAttack currentAttack;
-
     private boolean isGrounded;
 
+    private Body shield;
     private boolean shieldUp;
 
-    private Facing facing;
+    private CurrentAttack currentAttack;
+    //private ArrayList<Body> flyingProjectiles;
+    private Projectiles projectiles;
+
+    private int hp;
 
     public Body getBody() {
         return body;
@@ -56,10 +65,17 @@ public class Hero {
             hideShield();
     }
 
+    public int getHp() {
+        return hp;
+    }
+
     public Hero(World world) {
         this.world = world;
+
         shieldUp = false;
         facing = Facing.RIGHT;
+        hp = 100;
+        projectiles = new Projectiles(world);
 
         BodyDef bodyDef = new BodyDef()
         {{
@@ -70,7 +86,7 @@ public class Hero {
         body = world.createBody(bodyDef);
 
         final PolygonShape polygonShape = new PolygonShape(){{
-            setAsBox(0.4f, 0.4f);
+            setAsBox(HERO_SIZE, HERO_SIZE);
         }};
 
         FixtureDef fixtureDef = new FixtureDef() {{
@@ -108,8 +124,8 @@ public class Hero {
 
         FixtureDef fixtureDef = new FixtureDef() {{
             shape = poly;
-            filter.categoryBits = EntityTypes.SENSOR;
-            filter.maskBits = EntityTypes.SENSOR_MASK;
+            filter.categoryBits = EntityTypes.JUMP_SENSOR;
+            filter.maskBits = EntityTypes.JUMP_SENSOR_MASK;
             isSensor = true;
         }
         };
@@ -209,7 +225,10 @@ public class Hero {
 
         updateShield();
         updateSensor();
+        projectiles.update();
     }
+
+
 
     private void updateSensor() {
         sensor.setTransform(body.getPosition().x, body.getPosition().y - 0.45f, 0);
@@ -246,5 +265,25 @@ public class Hero {
         currentAttack = new CurrentAttack(index, facing, atk, STANDARD_ATTACK_DURATION);
 
         atk.setUserData(currentAttack);
+    }
+
+    public void throwProjectile() {
+        Vector3 mouse = MapRenderer.getRenderer().getMousePos();
+
+        final Vector2 spawnPosition = new Vector2(mouse.x, mouse.y);
+        spawnPosition.sub(body.getPosition()).nor().scl(PROJECTILE_SPAWN_DISTANCE).add(body.getPosition());
+
+        final Vector2 rotation = (new Vector2(mouse.x, mouse.y)).sub(body.getPosition());
+        float angle = (float) Math.atan2(rotation.y, rotation.x);
+
+        BodyDef projectileBody = new BodyDef() {{
+            position.set(spawnPosition);
+            type = BodyType.DynamicBody;
+        }
+        };
+
+        FixtureDef projectileFixtureDef = Attacks.getProjectile();
+
+        projectiles.addNew(projectileBody, projectileFixtureDef, angle);
     }
 }

@@ -6,6 +6,8 @@ import ru.vsu.csf.enlightened.gameobjects.hero.Hero;
 
 public class ComboTree {
 
+    public static final int THROW_PROJECTILE_BUTTON_CODE = 154;
+
     ComboTreeNode root;
     ComboTreeNode current;
 
@@ -108,5 +110,11 @@ public class ComboTree {
 
     public void keyUp(int keycode) {
 
+    }
+
+    public void endCombo() {
+        if (current != root) {
+            current = root;
+        }
     }
 }

@@ -137,15 +137,23 @@ public class Map {
     }
 
     public void keyDown(int keycode) {
-        if (keycode == Input.Keys.SHIFT_LEFT)
+        if (keycode == Input.Keys.SHIFT_LEFT) {
             hero.setShieldUp(true);
+            keyController.endCombo();
+        }
+        else if (keycode == ComboTree.THROW_PROJECTILE_BUTTON_CODE) {
+            hero.throwProjectile();
+            keyController.endCombo();
+        }
         else
             keyController.keyDown(keycode);
     }
 
     public void keyUp(int keycode) {
-        if (keycode == Input.Keys.SHIFT_LEFT)
+        if (keycode == Input.Keys.SHIFT_LEFT) {
             hero.setShieldUp(false);
+            keyController.endCombo();
+        }
         else
             keyController.keyUp(keycode);
     }

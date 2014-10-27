@@ -3,6 +3,7 @@ package ru.vsu.csf.enlightened.gameobjects.collisions;
 import com.badlogic.gdx.physics.box2d.*;
 import ru.vsu.csf.enlightened.controlling.attacking.Attacks;
 import ru.vsu.csf.enlightened.controlling.attacking.CurrentAttack;
+import ru.vsu.csf.enlightened.controlling.attacking.projectile.Projectiles;
 import ru.vsu.csf.enlightened.gameobjects.Map;
 import ru.vsu.csf.enlightened.gameobjects.enemies.Dummy;
 import ru.vsu.csf.enlightened.gameobjects.hero.Hero;
@@ -61,6 +62,28 @@ public class HeroCollideListener implements ContactListener{
             return false;
     }*/
 
+    private boolean ifEnemyWasPierced(Contact contact) {
+        Fixture fixtureA = contact.getFixtureA();
+        Fixture fixtureB = contact.getFixtureB();
+
+        Object first  = fixtureA.getBody().getUserData();
+        Object second = fixtureB.getBody().getUserData();
+
+        if (first == null || second == null)
+            return false;
+
+        if (first.getClass().equals(Dummy.class) && second.getClass().equals(Projectiles.class)) {
+
+            return true;
+        }
+        else if (second.getClass().equals(Dummy.class) && first.getClass().equals(Projectiles.class)) {
+
+            return true;
+        }
+        else
+            return false;
+    }
+
     private boolean ifEnemyWasHit(Contact contact, AtomicReference<Dummy> enemy, AtomicReference<CurrentAttack> attack) {
         Fixture fixtureA = contact.getFixtureA();
         Fixture fixtureB = contact.getFixtureB();
@@ -98,6 +121,8 @@ public class HeroCollideListener implements ContactListener{
         if (ifEnemyWasHit(contact, enemy, attack)) {
             enemy.get().beAttacked(attack);
         }
+
+
     }
 
     @Override

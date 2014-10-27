@@ -7,9 +7,46 @@ import com.badlogic.gdx.physics.box2d.PolygonShape;
 import ru.vsu.csf.enlightened.gameobjects.collisions.EntityTypes;
 import ru.vsu.csf.enlightened.gameobjects.hero.Facing;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Attacks {
+
+    public static FixtureDef getProjectile() {
+        return new FixtureDef() {{
+                shape = new PolygonShape() {{
+                    setAsBox(0.2f, 0.05f);
+                }
+                };
+                restitution = 1;
+                density = 1;
+                friction = 50f;
+                filter.categoryBits = EntityTypes.PROJECTILE;
+                filter.maskBits = EntityTypes.PROJECTILE_MASK;
+            }};
+    }
+
+    /*public static ArrayList<FixtureDef> getProjectile() {
+        return new ArrayList<FixtureDef>() {{
+
+            add(new FixtureDef() {{
+                shape = new PolygonShape() {{
+                    setAsBox(0.2f, 0.05f);
+                }
+                };
+                restitution = 1;
+                density = 1;
+                friction = 50f;
+            }});
+
+            add(new FixtureDef(){{
+                shape = new PolygonShape() {{
+                    setAsBox(0.02f, 0.02f);
+                }};
+
+            }});
+        }};
+    }*/
 
     private static HashMap<Integer, HashMap<Facing, AttackTemplate>> attacks;
 

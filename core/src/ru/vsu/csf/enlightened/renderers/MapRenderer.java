@@ -2,20 +2,22 @@ package ru.vsu.csf.enlightened.renderers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.SpriteCache;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.*;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.physics.box2d.utils.Box2DBuild;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import ru.vsu.csf.enlightened.ShapeSlasher;
 import ru.vsu.csf.enlightened.gameobjects.Map;
+
+import java.util.Arrays;
 
 public class MapRenderer {
 
@@ -26,6 +28,8 @@ public class MapRenderer {
     private static final boolean IS_DRAWING_GRAPHICS = false;
 
     private Map map;
+
+    private Vector3 mousePos;
 
     private OrthographicCamera camera;
     private Vector3 lerpVector;
@@ -41,14 +45,38 @@ public class MapRenderer {
     private int[][] blocks;
 
     private Box2DDebugRenderer debugRenderer;
+    private BitmapFont debugFont;
 
-    public MapRenderer(Map map) {
+
+    private static MapRenderer instance;
+    private MapRenderer() {
+
+    }
+    public static MapRenderer getRenderer() {
+        if (instance == null)
+            instance = new MapRenderer();
+
+        return instance;
+    }
+
+    public void init(Map map) {
+        this.mousePos = new Vector3();
+
         this.batch = new SpriteBatch();
-        this.skyBatch = new SpriteBatch(10);
+        this.skyBatch = new SpriteBatch(10) {{
+            getProjectionMatrix().setToOrtho2D(0, 0, ShapeSlasher.WIDTH, ShapeSlasher.HEIGHT);
+        }
+        };
 
         this.debugRenderer = new Box2DDebugRenderer();
+        this.debugFont = new BitmapFont() {{
+            setColor(Color.YELLOW);
+        }
+        };
 
         this.map = map;
+        //this.screenCamera = new OrthographicCamera(ShapeSlasher.WIDTH, ShapeSlasher.HEIGHT);
+
         this.camera = new OrthographicCamera(BLOCK_COUNT_WIDTH, BLOCK_COUNT_HEIGHT);
         this.camera.position.set(0, 2, 0);
         lerpVector = new Vector3(0, 0, 0);
@@ -97,7 +125,7 @@ public class MapRenderer {
         camera.update();
 
         if (IS_DRAWING_GRAPHICS) {
-            skyBatch.begin();
+            /*skyBatch.begin();
             skyBatch.draw(sky, 0, 0, ShapeSlasher.WIDTH, ShapeSlasher.HEIGHT);
             skyBatch.end();
 
@@ -111,15 +139,30 @@ public class MapRenderer {
                 }
             }
 
-            cache.end();
+            cache.end();*/
 
             batch.setProjectionMatrix(camera.combined);
             batch.begin();
-            batch.draw(hero, hero.getX() - 0.5f, hero.getY() - 0.5f, 1, 1);
+
+            /*Vector2 coords = new Vector2(hero.getX(), hero.getY());
+            Vector3 result = screenCamera.unproject(new Vector3(coords.x, coords.y, 0));
+
+            debugFont.draw(batch, String.valueOf(map.getHero().getHp()), result.x, result.y);
+*/
             batch.end();
         }
 
         debugRenderer.render(map.getWorld(), camera.combined);
         map.getWorld().step(Gdx.graphics.getDeltaTime(), 6, 2);
+    }
+
+    public void updateMousePosition(int screenX, int screenY) {
+        Vector3 coords = new Vector3(screenX, screenY, 0);
+        mousePos = camera.unproject(coords);
+        //Gdx.app.log("Mouse", String.valueOf(coords));
+    }
+
+    public Vector3 getMousePos() {
+        return mousePos;
     }
 }
