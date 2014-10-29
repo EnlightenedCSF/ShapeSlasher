@@ -9,9 +9,16 @@ import ru.vsu.csf.enlightened.gameobjects.collisions.HeroCollideListener;
 import ru.vsu.csf.enlightened.gameobjects.enemies.Dummy;
 import ru.vsu.csf.enlightened.gameobjects.hero.Hero;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.util.ArrayList;
 
 public class Map {
+    private static final int NOTHING    = 0;
+    private static final int GROUND     = 1;
+    private static final int PLAYER     = 2;
+    private static final int ENEMY      = 3;
+
 
     private static final float GRAVITY = 12;
 
@@ -40,18 +47,46 @@ public class Map {
     public Map() {
         world = new World(new Vector2(0, -GRAVITY), true);
         world.setContactListener(new HeroCollideListener());
-
-        hero = new Hero(world);
         enemies = new ArrayList<Dummy>();
+    }
 
-        keyController = new ComboTree(hero);
+    public void loadLevel(String path) {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(path));
 
-        generateLevel();
+            String[] sizes = reader.readLine().split(" ");
+            tiles = new int[Integer.parseInt(sizes[0])][Integer.parseInt(sizes[1])];
+
+            for (int j = 0; j < tiles[0].length; j++) {
+                String[] chunks = reader.readLine().split(" ");
+
+                for (int i = 0; i < tiles.length; i++) {
+                    int code = Integer.parseInt(chunks[i]);
+                    switch (code) {
+                        case NOTHING:
+                        case GROUND:
+                            tiles[i][j] = code;
+                            break;
+                        case PLAYER:
+                            tiles[i][j] = NOTHING;
+                            hero = new Hero(world, i, tiles[0].length - j - 1);
+                            break;
+                        case ENEMY:
+                            tiles[i][j] = NOTHING;
+                            enemies.add(new Dummy(world, i, tiles[0].length - j - 1));
+                            break;
+                    }
+                }
+            }
+
+            reader.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         searchForSolidGround();
-
-        enemies.add(new Dummy(world, 5, 5));
-        enemies.add(new Dummy(world, 7, 5));
+        keyController = new ComboTree(hero);
     }
 
     private void searchForSolidGround() {
@@ -112,23 +147,7 @@ public class Map {
         grounds.get(0).setUserData(this);
     }
 
-    private void generateLevel() {
-        tiles = new int[20][10];
 
-        int width = tiles.length;
-        int height = tiles[0].length;
-
-        for (int j = 0; j < height; j++) {
-            for (int i = 0; i < width; i++) {
-                if (j == 9) {
-                    tiles[i][j] = 1;
-                }
-                else if (j == 8 && i % 7 == 6) {
-                    tiles[i][j] = 1;
-                }
-            }
-        }
-    }
 
     public int[][] getTiles() {
         return tiles;
@@ -158,47 +177,5 @@ public class Map {
             keyController.endCombo();
         }
     }
-
-
-    /*Body square;
-    Body circle;
-
-    private void test() {
-
-         square = world.createBody(new BodyDef() {{
-             type = BodyType.DynamicBody;
-             position.set(0, 0);
-        }});
-
-        FixtureDef fixtureDef = new FixtureDef() {{
-            shape = new PolygonShape(){{setAsBox(0.5f, 0.5f);}};
-            density = 0.5f;
-            restitution = 1;
-            filter.maskBits = 0;
-        }};
-
-        square.createFixture(fixtureDef);
-
-        circle = world.createBody(new BodyDef() {{
-            type = BodyType.DynamicBody;
-            position.set(0.5f, 0.5f);
-        }});
-
-        circle.createFixture(new FixtureDef() {{
-            shape = new CircleShape() {{ setRadius( 0.5f );}};
-            density = 0.5f;
-            restitution = 1;
-            filter.maskBits = 0;
-        }});
-
-        RevoluteJointDef jointDef = new RevoluteJointDef();
-        //jointDef.initialize(square, circle, circle.getWorldCenter());
-        jointDef.bodyA = square;
-        jointDef.bodyB = circle;
-        jointDef.localAnchorA.set(circle.getPosition());
-        jointDef.localAnchorB.set(square.getPosition());
-        world.createJoint(jointDef);
-
-    }*/
 }
 

@@ -76,7 +76,7 @@ public class Hero {
         return body.getPosition();
     }
 
-    public Hero(World world) {
+    public Hero(World world, final float x, final float y) {
         this.world = world;
 
         shieldUp = false;
@@ -87,7 +87,7 @@ public class Hero {
         BodyDef bodyDef = new BodyDef()
         {{
                 type = BodyType.DynamicBody;
-                position.set(1.5f, 3.5f);
+                position.set(x, y);
             }};
 
         body = world.createBody(bodyDef);

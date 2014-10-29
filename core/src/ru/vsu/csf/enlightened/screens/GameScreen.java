@@ -24,6 +24,7 @@ public class GameScreen extends SlasherScreen{
         super.show();
 
         map = new Map();
+        map.loadLevel("levels/1.ssl");
         mapRenderer = MapRenderer.getRenderer();
         mapRenderer.init(map);
 
