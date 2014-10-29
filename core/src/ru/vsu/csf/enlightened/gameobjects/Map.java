@@ -19,7 +19,6 @@ public class Map {
     private static final int PLAYER     = 2;
     private static final int ENEMY      = 3;
 
-
     private static final float GRAVITY = 12;
 
     private int[][] tiles;
@@ -147,8 +146,6 @@ public class Map {
         grounds.get(0).setUserData(this);
     }
 
-
-
     public int[][] getTiles() {
         return tiles;
     }
@@ -156,6 +153,10 @@ public class Map {
     public void update(float delta) {
         keyController.tick(delta);
         hero.update(delta);
+
+        for (Dummy d : enemies) {
+            d.update();
+        }
     }
 
     public void keyDown(int keycode) {

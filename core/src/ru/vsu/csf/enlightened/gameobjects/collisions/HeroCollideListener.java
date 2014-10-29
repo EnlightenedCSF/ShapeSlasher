@@ -111,6 +111,30 @@ public class HeroCollideListener implements ContactListener{
             return false;
     }
 
+    private boolean ifEnemySeesHero(Contact contact, AtomicReference<Dummy> enemy, AtomicReference<Hero> hero) {
+        Fixture fixtureA = contact.getFixtureA();
+        Fixture fixtureB = contact.getFixtureB();
+
+        Object first  = fixtureA.getBody().getUserData();
+        Object second = fixtureB.getBody().getUserData();
+
+        if (first == null || second == null)
+            return false;
+
+        if (first.getClass().equals(Dummy.class) && second.getClass().equals(Hero.class)) {
+            enemy.set((Dummy) first);
+            hero.set((Hero) second);
+            return true;
+        }
+        else if (second.getClass().equals(Dummy.class) && first.getClass().equals(Hero.class)) {
+            enemy.set((Dummy) second);
+            hero.set((Hero) first);
+            return true;
+        }
+        else
+            return false;
+    }
+
     @Override
     public void beginContact(Contact contact) {
         AtomicReference<Hero> hero = new AtomicReference<Hero>(null);
@@ -121,22 +145,21 @@ public class HeroCollideListener implements ContactListener{
         if (ifHeroReallyTouchesGround(contact, hero)) {
             hero.get().setIsGrounded(true);
         }
-        else
-
-        if (ifEnemyWasHit(contact, enemy, attack)) {
+        else if (ifEnemyWasHit(contact, enemy, attack)) {
             enemy.get().beAttacked(attack.get());
         }
-        else
-
-        if (ifEnemyWasPierced(contact, enemy, knife)) {
+        else if (ifEnemyWasPierced(contact, enemy, knife)) {
             enemy.get().bePierced(knife.get().getBody());
             knife.get().getProjectiles().delete(knife.get().getBody());
         }
-        else
-
-        if (ifKnifePiercesGround(contact, knife)) {
+        else if (ifKnifePiercesGround(contact, knife)) {
             knife.get().getProjectiles().freeze(knife.get().getBody());
         }
+
+        //todo: write functions to work with enemy sensors, write a behaviour
+        /*if (ifEnemySeesHero(contact, enemy, hero)) {
+            enemy.get().seeHero(hero.get());
+        }*/
     }
 
     @Override
