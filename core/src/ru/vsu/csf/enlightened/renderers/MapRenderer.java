@@ -16,6 +16,7 @@ import com.badlogic.gdx.physics.box2d.utils.Box2DBuild;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import ru.vsu.csf.enlightened.ShapeSlasher;
 import ru.vsu.csf.enlightened.gameobjects.Map;
+import ru.vsu.csf.enlightened.gameobjects.enemies.Dummy;
 
 import java.util.Arrays;
 
@@ -25,7 +26,7 @@ public class MapRenderer {
     public static final int BLOCK_COUNT_HEIGHT = 7;
     public static final int BLOCK_WIDTH = 70;
     public static final int BLOCK_HEIGHT = 70;
-    private static final boolean IS_DRAWING_GRAPHICS = false;
+    private static final boolean IS_DRAWING_GRAPHICS = true;
 
     private Map map;
 
@@ -46,7 +47,6 @@ public class MapRenderer {
 
     private Box2DDebugRenderer debugRenderer;
     private BitmapFont debugFont;
-
 
     private static MapRenderer instance;
     private MapRenderer() {
@@ -75,7 +75,6 @@ public class MapRenderer {
         };
 
         this.map = map;
-        //this.screenCamera = new OrthographicCamera(ShapeSlasher.WIDTH, ShapeSlasher.HEIGHT);
 
         this.camera = new OrthographicCamera(BLOCK_COUNT_WIDTH, BLOCK_COUNT_HEIGHT);
         this.camera.position.set(0, 2, 0);
@@ -116,6 +115,16 @@ public class MapRenderer {
         }
     }
 
+
+    private Vector2 getPositionOfObject(Vector2 pos) {
+        Vector2 center = new Vector2(pos.x, pos.y);
+        center.sub(camera.position.x + 0.2f, camera.position.y);
+
+        return new Vector2( ShapeSlasher.WIDTH/2.0f  + center.x / BLOCK_COUNT_WIDTH  * ShapeSlasher.WIDTH,
+                            ShapeSlasher.HEIGHT/2.0f + center.y / BLOCK_COUNT_HEIGHT * ShapeSlasher.HEIGHT );
+    }
+
+
     public void render(float delta) {
         map.update(delta);
 
@@ -141,27 +150,44 @@ public class MapRenderer {
 
             cache.end();*/
 
-            batch.setProjectionMatrix(camera.combined);
+
+
+
+            skyBatch.begin();
+
+            Vector2 coords = getPositionOfObject(new Vector2(hero.getX(), hero.getY()));
+            debugFont.draw(skyBatch, String.valueOf(map.getHero().getHp()), coords.x, coords.y);
+
+            for (Dummy enemy : map.getEnemies()) {
+                coords = getPositionOfObject(enemy.getPosition());
+                debugFont.draw(skyBatch, String.valueOf(enemy.getHp()), coords.x, coords.y);
+            }
+
+            skyBatch.end();
+
+            /*batch.setProjectionMatrix(camera.combined);
             batch.begin();
 
-            /*Vector2 coords = new Vector2(hero.getX(), hero.getY());
+
+            *//*Vector2 coords = new Vector2(hero.getX(), hero.getY());
             Vector3 result = screenCamera.unproject(new Vector3(coords.x, coords.y, 0));
 
             debugFont.draw(batch, String.valueOf(map.getHero().getHp()), result.x, result.y);
-*/
-            batch.end();
+*//*
+            batch.end();*/
         }
 
         debugRenderer.render(map.getWorld(), camera.combined);
         map.getWorld().step(Gdx.graphics.getDeltaTime(), 6, 2);
 
         map.getHero().getProjectiles().clearCollided();
+
+        //Gdx.app.log("Cam", String.valueOf(camera.position));
     }
 
     public void updateMousePosition(int screenX, int screenY) {
         Vector3 coords = new Vector3(screenX, screenY, 0);
         mousePos = camera.unproject(coords);
-        //Gdx.app.log("Mouse", String.valueOf(coords));
     }
 
     public Vector3 getMousePos() {

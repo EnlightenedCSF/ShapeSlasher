@@ -36,7 +36,6 @@ public class Hero {
     private boolean shieldUp;
 
     private CurrentAttack currentAttack;
-    //private ArrayList<Body> flyingProjectiles;
     private Projectiles projectiles;
 
     private int hp;
@@ -71,6 +70,10 @@ public class Hero {
 
     public Projectiles getProjectiles() {
         return projectiles;
+    }
+
+    public Vector2 getPosition() {
+        return body.getPosition();
     }
 
     public Hero(World world) {

@@ -95,7 +95,18 @@ public class ComboTree {
             ComboTreeNode node = current.getChildWithKeycode(keycode);
             if (node == null) {
                 current = root;
-                Gdx.app.log("Key", "You have ended your combo");
+
+                ComboTreeNode newNode = current.getChildWithKeycode(keycode);
+                if (newNode != null) {
+                    current = newNode;
+                    current.Do();
+
+                    if (current.nodes == null)
+                        current = root;
+                    Gdx.app.log("Key", "Switched");
+                }
+
+                //Gdx.app.log("Key", "You have ended your combo");
             }
             else {
                 current.timeLeft = current.delay;
@@ -106,10 +117,6 @@ public class ComboTree {
                     current = root;
             }
         }
-    }
-
-    public void keyUp(int keycode) {
-
     }
 
     public void endCombo() {

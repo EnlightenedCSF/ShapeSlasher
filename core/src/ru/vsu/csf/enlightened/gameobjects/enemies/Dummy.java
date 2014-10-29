@@ -16,6 +16,14 @@ public class Dummy {
 
     private int hp;
 
+    public int getHp() {
+        return hp;
+    }
+
+    public Vector2 getPosition() {
+        return body.getPosition();
+    }
+
     public Dummy(World world, float x, float y) {
         this.world = world;
         this.hp = 100;

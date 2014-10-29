@@ -33,6 +33,10 @@ public class Map {
         return hero;
     }
 
+    public ArrayList<Dummy> getEnemies() {
+        return enemies;
+    }
+
     public Map() {
         world = new World(new Vector2(0, -GRAVITY), true);
         world.setContactListener(new HeroCollideListener());
@@ -153,8 +157,6 @@ public class Map {
             hero.setShieldUp(false);
             keyController.endCombo();
         }
-        else
-            keyController.keyUp(keycode);
     }
 
 
