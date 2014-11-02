@@ -137,6 +137,7 @@ public class Map {
             shape = new PolygonShape() {{
                 setAsBox(0.5f * length, 0.5f);
             }};
+            friction = 0;
             density = 0.001f;
             filter.categoryBits = EntityTypes.GROUND;
             filter.maskBits = EntityTypes.GROUND_MASK;
@@ -155,7 +156,7 @@ public class Map {
         hero.update(delta);
 
         for (Dummy d : enemies) {
-            d.update();
+            d.update(delta);
         }
     }
 

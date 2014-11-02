@@ -1,19 +1,19 @@
 package ru.vsu.csf.enlightened.gameobjects.collisions;
 
 import com.badlogic.gdx.physics.box2d.*;
-import ru.vsu.csf.enlightened.controlling.attacking.Attacks;
 import ru.vsu.csf.enlightened.controlling.attacking.CurrentAttack;
 import ru.vsu.csf.enlightened.controlling.attacking.projectile.ProjectileInfo;
-import ru.vsu.csf.enlightened.controlling.attacking.projectile.Projectiles;
 import ru.vsu.csf.enlightened.gameobjects.Map;
 import ru.vsu.csf.enlightened.gameobjects.enemies.Dummy;
+import ru.vsu.csf.enlightened.gameobjects.enemies.ai.GroundSensor;
+import ru.vsu.csf.enlightened.gameobjects.enemies.ai.ObstacleSensor;
 import ru.vsu.csf.enlightened.gameobjects.hero.Hero;
 
 import java.util.concurrent.atomic.AtomicReference;
 
 public class HeroCollideListener implements ContactListener{
 
-    private boolean ifHeroReallyTouchesGround(Contact contact, AtomicReference<Hero> hero) {
+    private boolean ifHeroTouchesGround(Contact contact, AtomicReference<Hero> hero) {
         Fixture fixtureA = contact.getFixtureA();
         Fixture fixtureB = contact.getFixtureB();
 
@@ -30,12 +30,68 @@ public class HeroCollideListener implements ContactListener{
         if (first == null || second == null)
             return false;
 
-        if (isSensorA && first.getClass().equals(Hero.class)) {
+        if (isSensorA && first.getClass().equals(Hero.class) && (second.getClass().equals(Map.class) || second.getClass().equals(Dummy.class))) {
             hero.set((Hero) first);
             return true;
         }
-        else if (second.getClass().equals(Hero.class)) {
+        else if (second.getClass().equals(Hero.class)&& (first.getClass().equals(Map.class) || first.getClass().equals(Dummy.class))) {
             hero.set((Hero) second);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean ifEnemyTouchesGround(Contact contact, AtomicReference<Dummy> enemy) {
+        Fixture fixtureA = contact.getFixtureA();
+        Fixture fixtureB = contact.getFixtureB();
+
+        boolean isSensorA = fixtureA.isSensor();
+        boolean isSensorB = fixtureB.isSensor();
+
+        if (! (isSensorA ^ isSensorB)) {
+            return false;
+        }
+
+        Object first  = fixtureA.getBody().getUserData();
+        Object second = fixtureB.getBody().getUserData();
+
+        if (first == null || second == null)
+            return false;
+
+        if (isSensorA && first.getClass().equals(GroundSensor.class)) {
+            enemy.set(((GroundSensor) first).getParent());
+            return true;
+        }
+        else if (second.getClass().equals(GroundSensor.class)) {
+            enemy.set(((GroundSensor) second).getParent());
+            return true;
+        }
+        return false;
+    }
+
+    private boolean ifEnemySeesObstacle(Contact contact, AtomicReference<Dummy> enemy) {
+        Fixture fixtureA = contact.getFixtureA();
+        Fixture fixtureB = contact.getFixtureB();
+
+        boolean isSensorA = fixtureA.isSensor();
+        boolean isSensorB = fixtureB.isSensor();
+
+        if (! (isSensorA ^ isSensorB)) {
+            return false;
+        }
+
+        Object first  = fixtureA.getBody().getUserData();
+        Object second = fixtureB.getBody().getUserData();
+
+        if (first == null || second == null)
+            return false;
+
+        if (isSensorA && first.getClass().equals(ObstacleSensor.class) && second.getClass().equals(Map.class)) {
+            enemy.set(((ObstacleSensor) first).getParent());
+            return true;
+        }
+        else if (second.getClass().equals(ObstacleSensor.class) && first.getClass().equals(Map.class)) {
+            enemy.set(((ObstacleSensor) second).getParent());
             return true;
         }
         return false;
@@ -142,7 +198,7 @@ public class HeroCollideListener implements ContactListener{
         AtomicReference<CurrentAttack> attack = new AtomicReference<CurrentAttack>(null);
         AtomicReference<ProjectileInfo> knife = new AtomicReference<ProjectileInfo>(null);
 
-        if (ifHeroReallyTouchesGround(contact, hero)) {
+        if (ifHeroTouchesGround(contact, hero)) {
             hero.get().setIsGrounded(true);
         }
         else if (ifEnemyWasHit(contact, enemy, attack)) {
@@ -156,18 +212,28 @@ public class HeroCollideListener implements ContactListener{
             knife.get().getProjectiles().freeze(knife.get().getBody());
         }
 
-        //todo: write functions to work with enemy sensors, write a behaviour
-        /*if (ifEnemySeesHero(contact, enemy, hero)) {
-            enemy.get().seeHero(hero.get());
-        }*/
+        if (ifEnemyTouchesGround(contact, enemy)) {
+            enemy.get().setGrounded(true);
+        }
+        if (ifEnemySeesObstacle(contact, enemy)) {
+            enemy.get().setSeesObstacle(true);
+        }
     }
 
     @Override
     public void endContact(Contact contact) {
         AtomicReference<Hero> hero = new AtomicReference<Hero>(null);
+        AtomicReference<Dummy> enemy = new AtomicReference<Dummy>(null);
 
-        if (ifHeroReallyTouchesGround(contact, hero)) {
+        if (ifHeroTouchesGround(contact, hero)) {
             hero.get().setIsGrounded(false);
+        }
+
+        if (ifEnemyTouchesGround(contact, enemy)) {
+            enemy.get().setGrounded(false);
+        }
+        if (ifEnemySeesObstacle(contact, enemy)) {
+            enemy.get().setSeesObstacle(false);
         }
     }
 

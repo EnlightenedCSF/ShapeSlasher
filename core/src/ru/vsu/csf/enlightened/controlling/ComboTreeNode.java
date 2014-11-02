@@ -1,7 +1,5 @@
 package ru.vsu.csf.enlightened.controlling;
 
-import com.badlogic.gdx.Gdx;
-
 public class ComboTreeNode {
 
     int key;
@@ -24,7 +22,7 @@ public class ComboTreeNode {
         this.timeLeft -= delta;
         if (timeLeft < 0) {
             timeLeft = delay;
-            Gdx.app.log("Child", "Combo is over!");
+            //Gdx.app.log("Child", "Combo is over!");
             return true;
         }
         return false;

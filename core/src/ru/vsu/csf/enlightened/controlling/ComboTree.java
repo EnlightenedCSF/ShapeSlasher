@@ -27,7 +27,7 @@ public class ComboTree {
                              @Override
                              public void Do() {
                                  hero.attack(1);
-                                 Gdx.app.log("Action", "Attack!");
+                                 //Gdx.app.log("Action", "Attack!");
                              }
                          };
                     }}
@@ -55,7 +55,6 @@ public class ComboTree {
                 @Override
                 public void Do() {
                     hero.attack(1);
-                    Gdx.app.log("Action", "Another attack!");
                 }
             };
             nodes = new ComboTreeNode[] { new ComboTreeNode(Input.Keys.F, 2) {{
@@ -63,7 +62,6 @@ public class ComboTree {
                     @Override
                     public void Do() {
                         hero.attack(3);
-                        Gdx.app.log("Action", "Finisher!");
                     }
                 };
             }}
@@ -103,10 +101,7 @@ public class ComboTree {
 
                     if (current.nodes == null)
                         current = root;
-                    Gdx.app.log("Key", "Switched");
                 }
-
-                //Gdx.app.log("Key", "You have ended your combo");
             }
             else {
                 current.timeLeft = current.delay;
