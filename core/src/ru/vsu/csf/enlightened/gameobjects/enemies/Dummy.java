@@ -1,6 +1,5 @@
 package ru.vsu.csf.enlightened.gameobjects.enemies;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import ru.vsu.csf.enlightened.controlling.attacking.AttackTemplate;
@@ -12,13 +11,15 @@ import ru.vsu.csf.enlightened.gameobjects.enemies.ai.GroundSensor;
 import ru.vsu.csf.enlightened.gameobjects.enemies.ai.ObstacleSensor;
 import ru.vsu.csf.enlightened.gameobjects.enemies.ai.VisibleArea;
 import ru.vsu.csf.enlightened.gameobjects.hero.Facing;
+import ru.vsu.csf.enlightened.gameobjects.hero.Hero;
 
 public class Dummy {
 
     private static final float JUMP_HEIGHT = 6;
-    private static final float JUMP_TIME = 200;
-    private static final float RUN_SPEED = 0.7f;
-    private static final float MAX_VELOCITY = 6f;
+    private static final float PATROL_DELAY_TIME = 3;
+
+    private static final float RUN_SPEED = 0.45f;
+    private static final float MAX_VELOCITY = 4f;
 
     private final float BODY_SIZE        = 0.5f;
     private final float VISIBLE_DISTANCE = 3f;
@@ -32,7 +33,8 @@ public class Dummy {
     private GroundSensor groundSensor;
 
     private boolean isGrounded;
-    private float jumpDelay;
+    //private float jumpDelay;
+    private boolean isJumpingSideWay = false;
 
     private boolean seesObstacle;
     private boolean isMoving;
@@ -44,8 +46,10 @@ public class Dummy {
     private boolean isWalkingToB;
     private Vector2 pointA;
     private Vector2 pointB;
+    private float patrolDelayTime;
 
-    private Vector2 playerPos;
+    private boolean seesHero = false;
+    private Hero hero;
 
     public boolean isGrounded() {
         return isGrounded;
@@ -54,7 +58,7 @@ public class Dummy {
     public void setGrounded(boolean isGrounded) {
         this.isGrounded = isGrounded;
         if (isGrounded)
-            jumpDelay = 0;
+            isJumpingSideWay = false;
     }
 
     public boolean isSeesObstacle() {
@@ -80,11 +84,19 @@ public class Dummy {
         this.isGrounded = false;
         this.setSeesObstacle(false);
         this.isMoving = false;
-        this.state = BehaviourStates.PATROL;
+
+        this.patrolDelayTime = 0;
+        this.hero = null;
 
         createBody(x, y);
-    }
 
+        facing = Facing.LEFT;
+        state = BehaviourStates.ATTACK;
+
+        isWalkingToB = false;
+        pointA = new Vector2(body.getPosition().x - 2.5f, body.getPosition().y);
+        pointB = new Vector2(body.getPosition().x + 0.5f, body.getPosition().y);
+    }
 
     public boolean decreaseHP(int damage) {
         hp -= damage;
@@ -121,13 +133,6 @@ public class Dummy {
         createAntiHeroVisionSensor();
         createAntiObstacleSensor();
         createGroundSensor();
-
-        facing = Facing.LEFT;
-        state = BehaviourStates.PATROL;
-
-        isWalkingToB = false;
-        pointA = new Vector2(body.getPosition().x - 2.5f, body.getPosition().y);
-        pointB = new Vector2(body.getPosition().x + 0.5f, body.getPosition().y);
     }
 
 
@@ -189,7 +194,7 @@ public class Dummy {
         visibleArea = new VisibleArea(world.createBody(new BodyDef() {{
             position.set(facing == Facing.LEFT ? new Vector2(body.getPosition().x - (BODY_SIZE + VISIBLE_DISTANCE/2.0f), body.getPosition().y) :
                     new Vector2(body.getPosition().x + (BODY_SIZE + VISIBLE_DISTANCE/2.0f), body.getPosition().y));
-            type = BodyType.KinematicBody;
+            type = BodyType.DynamicBody;
         }
         }), this);
 
@@ -241,22 +246,30 @@ public class Dummy {
 
         switch (state) {
             case PATROL:
-
                 if (isGrounded) {
-                    if (!isWalkingToB) {      //to A
-                        if (!seesObstacle)
-                            stepLeft();
-                        else
-                            jumpLeft();
+                    if (patrolDelayTime > 0) {
+                        patrolDelayTime -= delta;
                     } else {
-                        if (!seesObstacle)
-                            stepRight();
-                        else
-                            jumpRight();
+                        if (!isWalkingToB) {      //to A
+                            if (!seesObstacle)
+                                stepLeft();
+                            else
+                                jumpLeft();
+                        } else {
+                            if (!seesObstacle)
+                                stepRight();
+                            else
+                                jumpRight();
+                        }
                     }
                 }
                 break;
             case ATTACK:
+
+                if (isGrounded)  {
+                    jump();
+                }
+
 
                 break;
             case FLEE:
@@ -294,27 +307,31 @@ public class Dummy {
         }
 
         if (!isGrounded) {
-            jumpDelay -= delta;
-
-            if (jumpDelay > 0) {
+            if (isJumpingSideWay) {
                 if (facing == Facing.LEFT)
                     stepLeft();
                 else
                     stepRight();
             }
-            else
-                jumpDelay = 0;
         }
 
-        if (state == BehaviourStates.PATROL) {
-            if (isWalkingToB) {
-                if (Math.abs(body.getPosition().x - pointB.x) < 0.1) {
-                    isWalkingToB = false;
+        switch (state) {
+            case  PATROL:
+                if (isWalkingToB) {
+                    if (Math.abs(body.getPosition().x - pointB.x) < 0.1) {
+                        isWalkingToB = false;
+                        patrolDelayTime = PATROL_DELAY_TIME;
+                    }
                 }
-            }
-            else if (Math.abs(body.getPosition().x - pointA.x) < 0.1) {
+                else if (Math.abs(body.getPosition().x - pointA.x) < 0.1) {
                     isWalkingToB = true;
-            }
+                    patrolDelayTime = PATROL_DELAY_TIME;
+                }
+                break;
+
+            case ATTACK:
+
+                break;
         }
     }
 
@@ -336,16 +353,17 @@ public class Dummy {
         body.setLinearVelocity(body.getLinearVelocity().x, 0);
         body.setTransform(body.getPosition().x, body.getPosition().y + 0.01f, Facing.getAngle(facing));
         body.applyLinearImpulse(0, JUMP_HEIGHT * body.getMass(), body.getPosition().x, body.getPosition().y, true);
-        jumpDelay = JUMP_TIME;
     }
 
     private void jumpLeft() {
         jump();
+        isJumpingSideWay = true;
         stepLeft();
     }
 
     private void jumpRight() {
         jump();
+        isJumpingSideWay = true;
         stepRight();
     }
 
@@ -356,28 +374,63 @@ public class Dummy {
 
         switch (facing) {
             case RIGHT:
-                visibleArea.getBody().setTransform(body.getPosition().x + (2*BODY_SIZE + VISIBLE_DISTANCE/2.0f), body.getPosition().y, 0);
+                //visibleArea.getBody().setTransform(body.getPosition().x + (2*BODY_SIZE + VISIBLE_DISTANCE/2.0f), body.getPosition().y, 0);
                 obstacleSensor.getBody().setTransform(body.getPosition().x + (BODY_SIZE + 0.2f), body.getPosition().y, 0);
                 break;
             case LEFT:
-                visibleArea.getBody().setTransform(body.getPosition().x - (2*BODY_SIZE + VISIBLE_DISTANCE/2.0f), body.getPosition().y, 0);
+                //visibleArea.getBody().setTransform(body.getPosition().x - (2*BODY_SIZE + VISIBLE_DISTANCE/2.0f), body.getPosition().y, 0);
                 obstacleSensor.getBody().setTransform(body.getPosition().x - (BODY_SIZE + 0.2f), body.getPosition().y, 0);
                 break;
         }
+
+        if (state == BehaviourStates.ATTACK) {
+            if (seesHero) {
+                Vector2 pos = body.getPosition().sub(hero.getPosition());
+                float angle = (float) Math.atan2(pos.y, pos.x);
+
+                Vector2 sensorCenter = new Vector2((float) (VISIBLE_DISTANCE / 2.0 * Math.cos(angle)), (float) (VISIBLE_DISTANCE / 2.0 * Math.sin(angle))).scl(1.8f);
+                pos = body.getPosition().sub(sensorCenter);
+
+                visibleArea.getBody().setTransform(pos.x, pos.y, angle);
+            }
+            else {
+                switch (facing) {
+                    case RIGHT:
+                        visibleArea.getBody().setTransform(body.getPosition().x + (2*BODY_SIZE + VISIBLE_DISTANCE/2.0f), body.getPosition().y, 0);
+                        break;
+                    case LEFT:
+                        visibleArea.getBody().setTransform(body.getPosition().x - (2*BODY_SIZE + VISIBLE_DISTANCE/2.0f), body.getPosition().y, 0);
+                        break;
+                }
+            }
+        }
     }
 
-    /*public void seeHero(Hero hero) {
+
+
+    public void seeHero(Hero hero) {
+        this.hero = hero;
+        seesHero = true;
+
         switch (state) {
             case STAND_STILL:
             case PATROL:
                 if (hp > FLEEING_HP_THRESHOLD) {
                     state = BehaviourStates.ATTACK;
-                    playerPos = hero.getPosition();
+
+                    //playerPos = hero.getPosition();
+
                 }
                 else {
                     state = BehaviourStates.FLEE;
                 }
                 break;
         }
-    }*/
+    }
+
+    public void unseeHero() {
+        seesHero = false;
+
+
+    }
 }

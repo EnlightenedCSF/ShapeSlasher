@@ -7,6 +7,7 @@ import ru.vsu.csf.enlightened.gameobjects.Map;
 import ru.vsu.csf.enlightened.gameobjects.enemies.Dummy;
 import ru.vsu.csf.enlightened.gameobjects.enemies.ai.GroundSensor;
 import ru.vsu.csf.enlightened.gameobjects.enemies.ai.ObstacleSensor;
+import ru.vsu.csf.enlightened.gameobjects.enemies.ai.VisibleArea;
 import ru.vsu.csf.enlightened.gameobjects.hero.Hero;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -177,13 +178,13 @@ public class HeroCollideListener implements ContactListener{
         if (first == null || second == null)
             return false;
 
-        if (first.getClass().equals(Dummy.class) && second.getClass().equals(Hero.class)) {
-            enemy.set((Dummy) first);
+        if (first.getClass().equals(VisibleArea.class) && second.getClass().equals(Hero.class)) {
+            enemy.set(((VisibleArea) first).getParent());
             hero.set((Hero) second);
             return true;
         }
-        else if (second.getClass().equals(Dummy.class) && first.getClass().equals(Hero.class)) {
-            enemy.set((Dummy) second);
+        else if (second.getClass().equals(VisibleArea.class) && first.getClass().equals(Hero.class)) {
+            enemy.set(((VisibleArea) second).getParent());
             hero.set((Hero) first);
             return true;
         }
@@ -218,6 +219,9 @@ public class HeroCollideListener implements ContactListener{
         if (ifEnemySeesObstacle(contact, enemy)) {
             enemy.get().setSeesObstacle(true);
         }
+        if (ifEnemySeesHero(contact, enemy, hero)) {
+            enemy.get().seeHero(hero.get());
+        }
     }
 
     @Override
@@ -234,6 +238,9 @@ public class HeroCollideListener implements ContactListener{
         }
         if (ifEnemySeesObstacle(contact, enemy)) {
             enemy.get().setSeesObstacle(false);
+        }
+        if (ifEnemySeesHero(contact, enemy, hero)) {
+            enemy.get().unseeHero();
         }
     }
 

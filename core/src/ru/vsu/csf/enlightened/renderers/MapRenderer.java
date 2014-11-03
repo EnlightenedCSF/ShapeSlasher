@@ -161,8 +161,8 @@ public class MapRenderer {
             for (Dummy enemy : map.getEnemies()) {
                 coords = getPositionOfObject(enemy.getPosition());
                 debugFont.draw(skyBatch, String.valueOf(enemy.getHp()), coords.x, coords.y);
-                debugFont.draw(skyBatch, String.valueOf(enemy.isGrounded()), coords.x, coords.y + 20);
-                debugFont.draw(skyBatch, String.valueOf(enemy.isSeesObstacle()), coords.x, coords.y + 40);
+                //debugFont.draw(skyBatch, String.valueOf(enemy.isGrounded()), coords.x, coords.y + 20);
+                //debugFont.draw(skyBatch, String.valueOf(enemy.isSeesObstacle()), coords.x, coords.y + 40);
             }
 
             skyBatch.end();
