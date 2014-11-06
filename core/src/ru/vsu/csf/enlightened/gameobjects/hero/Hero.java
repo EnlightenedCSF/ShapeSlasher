@@ -8,6 +8,7 @@ import com.badlogic.gdx.physics.box2d.*;
 import ru.vsu.csf.enlightened.controlling.attacking.AttackTemplate;
 import ru.vsu.csf.enlightened.controlling.attacking.Attacks;
 import ru.vsu.csf.enlightened.controlling.attacking.CurrentAttack;
+import ru.vsu.csf.enlightened.controlling.attacking.EnemyAttack;
 import ru.vsu.csf.enlightened.controlling.attacking.projectile.Projectiles;
 import ru.vsu.csf.enlightened.gameobjects.collisions.EntityTypes;
 import ru.vsu.csf.enlightened.renderers.MapRenderer;
@@ -66,6 +67,10 @@ public class Hero {
 
     public int getHp() {
         return hp;
+    }
+
+    public void decreaseHP(int amount) {
+        this.hp -= amount;
     }
 
     public Projectiles getProjectiles() {
@@ -235,8 +240,6 @@ public class Hero {
         projectiles.update();
     }
 
-
-
     private void updateSensor() {
         sensor.setTransform(body.getPosition().x, body.getPosition().y - 0.45f, 0);
     }
@@ -292,5 +295,18 @@ public class Hero {
         FixtureDef projectileFixtureDef = Attacks.getProjectile();
 
         projectiles.addNew(projectileBody, projectileFixtureDef, angle);
+    }
+
+    public void beAttacked(EnemyAttack attack) {
+        AttackTemplate template = Attacks.getAttacks().get(attack.index).get(attack.facing);
+
+        int damage = template.damage;
+        this.decreaseHP(damage);
+
+        Vector2 direction = new Vector2(template.knockbackDirection).nor().scl(template.knockbackPower);
+        Vector2 position = body.getPosition();
+
+        body.getPosition().set(position.x, position.y + 0.05f);
+        body.applyLinearImpulse(direction.x, direction.y, position.x, position.y, true);
     }
 }

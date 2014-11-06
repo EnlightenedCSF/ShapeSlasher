@@ -2,6 +2,7 @@ package ru.vsu.csf.enlightened.gameobjects.collisions;
 
 import com.badlogic.gdx.physics.box2d.*;
 import ru.vsu.csf.enlightened.controlling.attacking.CurrentAttack;
+import ru.vsu.csf.enlightened.controlling.attacking.EnemyAttack;
 import ru.vsu.csf.enlightened.controlling.attacking.projectile.ProjectileInfo;
 import ru.vsu.csf.enlightened.gameobjects.Map;
 import ru.vsu.csf.enlightened.gameobjects.enemies.Dummy;
@@ -168,6 +169,30 @@ public class HeroCollideListener implements ContactListener{
             return false;
     }
 
+    private boolean ifHeroWasHit(Contact contact, AtomicReference<Hero> hero, AtomicReference<EnemyAttack> attack) {
+        Fixture fixtureA = contact.getFixtureA();
+        Fixture fixtureB = contact.getFixtureB();
+
+        Object first  = fixtureA.getBody().getUserData();
+        Object second = fixtureB.getBody().getUserData();
+
+        if (first == null || second == null)
+            return false;
+
+        if (first.getClass().equals(Hero.class) && second.getClass().equals(EnemyAttack.class)) {
+            hero.set((Hero) first);
+            attack.set((EnemyAttack) second);
+            return true;
+        }
+        else if (second.getClass().equals(Hero.class) && first.getClass().equals(EnemyAttack.class)) {
+            hero.set((Hero) second);
+            attack.set((EnemyAttack) first);
+            return true;
+        }
+        else
+            return false;
+    }
+
     private boolean ifEnemySeesHero(Contact contact, AtomicReference<Dummy> enemy, AtomicReference<Hero> hero) {
         Fixture fixtureA = contact.getFixtureA();
         Fixture fixtureB = contact.getFixtureB();
@@ -197,6 +222,7 @@ public class HeroCollideListener implements ContactListener{
         AtomicReference<Hero> hero = new AtomicReference<Hero>(null);
         AtomicReference<Dummy> enemy = new AtomicReference<Dummy>(null);
         AtomicReference<CurrentAttack> attack = new AtomicReference<CurrentAttack>(null);
+        AtomicReference<EnemyAttack> enemyAttack = new AtomicReference<EnemyAttack>(null);
         AtomicReference<ProjectileInfo> knife = new AtomicReference<ProjectileInfo>(null);
 
         if (ifHeroTouchesGround(contact, hero)) {
@@ -212,15 +238,17 @@ public class HeroCollideListener implements ContactListener{
         else if (ifKnifePiercesGround(contact, knife)) {
             knife.get().getProjectiles().freeze(knife.get().getBody());
         }
-
-        if (ifEnemyTouchesGround(contact, enemy)) {
+        else if (ifEnemyTouchesGround(contact, enemy)) {
             enemy.get().setGrounded(true);
         }
-        if (ifEnemySeesObstacle(contact, enemy)) {
+        else if (ifEnemySeesObstacle(contact, enemy)) {
             enemy.get().setSeesObstacle(true);
         }
-        if (ifEnemySeesHero(contact, enemy, hero)) {
+        else if (ifEnemySeesHero(contact, enemy, hero)) {
             enemy.get().seeHero(hero.get());
+        }
+        else if (ifHeroWasHit(contact, hero, enemyAttack)) {
+            hero.get().beAttacked(enemyAttack.get());
         }
     }
 

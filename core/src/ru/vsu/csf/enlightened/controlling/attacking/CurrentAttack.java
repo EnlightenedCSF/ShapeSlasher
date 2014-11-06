@@ -4,7 +4,6 @@ import com.badlogic.gdx.physics.box2d.Body;
 import ru.vsu.csf.enlightened.gameobjects.hero.Facing;
 
 public class CurrentAttack {
-
     public int index;
     public Facing facing;
     public Body body;
